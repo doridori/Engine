@@ -89,6 +89,8 @@ public class FsmEngine<E, T>
         if(mCurrentCylinder != null && mCurrentCylinder.exitActionClass != null)
             doAction(mCurrentCylinder.exitActionClass, mCurrentCylindersData);
 
+        if(!mCylinderMap.containsKey(state))
+            throw new NullPointerException(state.getClass().getName()+"."+state.toString()+" does not exist in map!");
         mCurrentCylinder = mCylinderMap.get(state);
         mCurrentCylindersData = optionalInputData;
         if(mCurrentCylinder.enterActionClass != null)
@@ -268,7 +270,7 @@ public class FsmEngine<E, T>
             return mFsm;
         }
 
-        public void setFsm(FsmEngine<E, T> fsm) {
+        void setFsm(FsmEngine<E, T> fsm) {
             this.mFsm = fsm;
         }
 

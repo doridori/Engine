@@ -28,7 +28,7 @@ public class ExampleLCEDef
         void run()
         {
             //do some loading
-            getFsm().nextState(MainStates.CONTENT, new LoadedData("FakeLoadedData!"));
+            getFsm().nextState(Error.A, new LoadedData("FakeLoadedData!"));
         }
     }
 
@@ -41,5 +41,7 @@ public class ExampleLCEDef
             this.someLoadedData = mSomeLoadedData;
         }
     }
+
+    enum Error{A}
 }
 
