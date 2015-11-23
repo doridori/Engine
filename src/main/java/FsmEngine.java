@@ -15,14 +15,14 @@ public class FsmEngine<E, T>
     // Definition Fields
     //=====================================================//
 
-    private Map<E, Cylinder<E>> mCylinderMap = new HashMap<>();
+    private Map<E, Cylinder<E, T>> mCylinderMap = new HashMap<>();
     private Map<T, Trigger> mTriggerMap = new HashMap<>();
 
     //=====================================================//
     // Operating Fields
     //=====================================================//
 
-    private Cylinder<E> mCurrentCylinder;
+    private Cylinder<E, T> mCurrentCylinder;
     /**
      * May be null
      */
@@ -44,10 +44,10 @@ public class FsmEngine<E, T>
 
         public Builder()
         {
-            mFsmEngine = new FsmEngine<E, T>();
+            mFsmEngine = new FsmEngine<>();
         }
 
-        public Builder<E, T> addCylinder(Cylinder<E> cylinder)
+        public Builder<E, T> addCylinder(Cylinder<E, T> cylinder)
         {
             mFsmEngine.addCylinder(cylinder);
             return this;
@@ -81,8 +81,8 @@ public class FsmEngine<E, T>
     /**
      * Switch to next state. If you want to enforce rules on state switching use {@link #trigger(Object, UnclassedDataType)} instead.
      *
-     * @param state
-     * @param optionalInputData
+     * @param state state to move to
+     * @param optionalInputData can be null. Will be passed to next states {@link FsmEngine.Action} classed
      */
     public final void nextState(E state, UnclassedDataType optionalInputData)
     {
@@ -112,14 +112,14 @@ public class FsmEngine<E, T>
     /**
      * Execute (enter/exit) action
      *
-     * @param actionClass
-     * @param input
+     * @param actionClass Action to execute
+     * @param input can be null
      */
-    private void doAction(Class<? extends Action> actionClass, UnclassedDataType input)
+    private void doAction(Class<? extends Action<E, T>> actionClass, UnclassedDataType input)
     {
         try
         {
-            Action action = actionClass.getConstructor().newInstance();
+            Action<E, T> action = actionClass.getConstructor().newInstance();
             action.setInputData(input);
             action.setFsm(this); //ignore unchecked - its quite hard to pass cyclinders with actions of the wrong type due to the <> used for cylinder def when using the builder
             action.run();
@@ -131,7 +131,7 @@ public class FsmEngine<E, T>
     }
 
 
-    private void addCylinder(Cylinder<E> cylinder)
+    private void addCylinder(Cylinder<E, T> cylinder)
     {
         mCylinderMap.put(cylinder.stateEnum, cylinder);
     }
@@ -139,7 +139,7 @@ public class FsmEngine<E, T>
     /**
      * Only public interface once running!
      *
-     * @param trigger
+     * @param trigger trigger def
      */
     private void addTrigger(Trigger<E, T> trigger)
     {
@@ -186,6 +186,7 @@ public class FsmEngine<E, T>
      * 2. Use a compile-time checked approach. Not using as results in more verbose state definitions (i.e. a type method per state and state enumerating interface definitions as per the Visitor pattern). See https://github.com/doridori/Dynamohttps://github.com/doridori/Dynamo for an example of this. Has its places but not ideal for small state machines with minimal/no data per state.
      * 3. Casting, which will auto-cast out to the expected type (essentially a cast with slightly improved error reporting). Runtime checked. This lib uses this approach as the focus is a lean state-machine. Essentially shifts the implementation checking away from the compiler and into your tests. Most of time time I find there isn`t any data to pass so type safety was not worth the massive amounts of boilerplate!
      */
+    @SuppressWarnings("unchecked")
     public static abstract class UnclassedDataType
     {
         public <T> T getAsType(Class<T> clazz)
@@ -210,23 +211,23 @@ public class FsmEngine<E, T>
      *
      * @param <E> State enum type
      */
-    public static class Cylinder<E>
+    public static class Cylinder<E, T>
     {
         private final E stateEnum;
-        private final Class<? extends Action> enterActionClass;
-        private final Class<? extends Action> exitActionClass;
+        private final Class<? extends Action<E, T>> enterActionClass;
+        private final Class<? extends Action<E, T>> exitActionClass;
 
         public Cylinder(E stateEnum)
         {
             this(stateEnum, null, null);
         }
 
-        public Cylinder(E stateEnum, Class<? extends Action> enterActionClass)
+        public Cylinder(E stateEnum, Class<? extends Action<E, T>> enterActionClass)
         {
             this(stateEnum, enterActionClass, null);
         }
 
-        public Cylinder(E stateEnum, Class<? extends Action> enterActionClass, Class<? extends Action> exitActionClass)
+        public Cylinder(E stateEnum, Class<? extends Action<E, T>> enterActionClass, Class<? extends Action<E, T>> exitActionClass)
         {
             this.stateEnum = stateEnum;
             this.enterActionClass = enterActionClass;
@@ -251,7 +252,7 @@ public class FsmEngine<E, T>
         /**
          * Optional data object that can be used by this action
          *
-         * @param unclassedDataType
+         * @param unclassedDataType can be null
          */
         void setInputData(UnclassedDataType unclassedDataType)
         {
@@ -284,7 +285,7 @@ public class FsmEngine<E, T>
     public interface Observer<E>
     {
         /**
-         * @param state
+         * @param state state enum
          * @param unclassedDataType may be null - should be documented as part of fsm implementation
          */
         void currentState(E state, UnclassedDataType unclassedDataType);

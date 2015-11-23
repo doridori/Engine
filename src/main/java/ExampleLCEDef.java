@@ -10,9 +10,9 @@ public class ExampleLCEDef
     public ExampleLCEDef()
     {
          mFsm = new FsmEngine.Builder<MainStates, FsmEngine.NoTriggers>()
-                .addCylinder(new FsmEngine.Cylinder<>(MainStates.LOADING, LoadingEnterAction.class))
-                .addCylinder(new FsmEngine.Cylinder<>(MainStates.CONTENT))
-                .addCylinder(new FsmEngine.Cylinder<>(MainStates.ERROR))
+                .addCylinder(new FsmEngine.Cylinder<MainStates, FsmEngine.NoTriggers>(MainStates.LOADING, LoadingEnterAction.class))
+                .addCylinder(new FsmEngine.Cylinder<MainStates, FsmEngine.NoTriggers>(MainStates.CONTENT))
+                .addCylinder(new FsmEngine.Cylinder<MainStates, FsmEngine.NoTriggers>(MainStates.ERROR))
                 .setStartingState(MainStates.LOADING)
                 .build();
     }
@@ -22,13 +22,13 @@ public class ExampleLCEDef
         return mFsm;
     }
 
-    public static class LoadingEnterAction extends FsmEngine.Action
+    public static class LoadingEnterAction extends FsmEngine.Action<MainStates, FsmEngine.NoTriggers>
     {
         @Override
         void run()
         {
             //do some loading
-            getFsm().nextState(Error.A, new LoadedData("FakeLoadedData!"));
+            getFsm().nextState(MainStates.CONTENT, new LoadedData("FakeLoadedData!"));
         }
     }
 
@@ -41,7 +41,5 @@ public class ExampleLCEDef
             this.someLoadedData = mSomeLoadedData;
         }
     }
-
-    enum Error{A}
 }
 
