@@ -5,16 +5,14 @@ public class ExampleLCEDef
         LOADING, CONTENT, ERROR
     }
 
-    FsmEngine<MainStates, FsmEngine.NoTriggers> mFsm;
+    FsmEngine<MainStates, FsmEngine.NoTriggers> mFsm = new FsmEngine<>();
 
     public ExampleLCEDef()
     {
-         mFsm = new FsmEngine.Builder<MainStates, FsmEngine.NoTriggers>()
-                .addCylinder(new FsmEngine.Cylinder<MainStates, FsmEngine.NoTriggers>(MainStates.LOADING, LoadingEnterAction.class))
-                .addCylinder(new FsmEngine.Cylinder<MainStates, FsmEngine.NoTriggers>(MainStates.CONTENT))
-                .addCylinder(new FsmEngine.Cylinder<MainStates, FsmEngine.NoTriggers>(MainStates.ERROR))
-                .setStartingState(MainStates.LOADING)
-                .build();
+         mFsm.newCylinder(MainStates.LOADING).setEnterActionClass(LoadingEnterAction.class);
+         mFsm.newCylinder(MainStates.CONTENT);
+         mFsm.newCylinder(MainStates.ERROR);
+         mFsm.start(MainStates.LOADING);
     }
 
     public FsmEngine<MainStates, FsmEngine.NoTriggers> getFsm()

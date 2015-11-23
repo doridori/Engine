@@ -33,45 +33,13 @@ public class FsmEngine<E, T>
     // Builder
     //=====================================================//
 
-    /**
-     * @param <E> State enum type
-     * @param <T> Trigger events
-     */
-    public static class Builder<E, T>
+    private boolean mStarted;
+
+    public FsmEngine<E, T> start(E startingState)
     {
-        private final FsmEngine<E, T> mFsmEngine;
-        private boolean mStarted;
-
-        public Builder()
-        {
-            mFsmEngine = new FsmEngine<>();
-        }
-
-        public Builder<E, T> addCylinder(Cylinder<E, T> cylinder)
-        {
-            mFsmEngine.addCylinder(cylinder);
-            return this;
-        }
-
-        public Builder<E, T> addTrigger(Trigger<E, T> trigger)
-        {
-            mFsmEngine.addTrigger(trigger);
-            return this;
-        }
-
-        public Builder<E, T> setStartingState(E startingState)
-        {
-            mStarted = true;
-            mFsmEngine.nextState(startingState, null);
-            return this;
-        }
-
-        public FsmEngine<E, T> build()
-        {
-            if(!mStarted)
-                throw new IllegalStateException("Not started");
-            return mFsmEngine;
-        }
+        mStarted = true;
+        nextState(startingState, null);
+        return this;
     }
 
     //=====================================================//
@@ -131,9 +99,10 @@ public class FsmEngine<E, T>
     }
 
 
-    private void addCylinder(Cylinder<E, T> cylinder)
+    private FsmEngine<E, T> addCylinder(Cylinder<E, T> cylinder)
     {
         mCylinderMap.put(cylinder.stateEnum, cylinder);
+        return this;
     }
 
     /**
@@ -141,9 +110,10 @@ public class FsmEngine<E, T>
      *
      * @param trigger trigger def
      */
-    private void addTrigger(Trigger<E, T> trigger)
+    public FsmEngine<E, T> addTrigger(Trigger<E, T> trigger)
     {
         mTriggerMap.put(trigger.onTrigger, trigger);
+        return this;
     }
 
     //=====================================================//
@@ -207,6 +177,17 @@ public class FsmEngine<E, T>
     //=====================================================//
 
     /**
+     * Create a new Typed Cylinder
+     * @return
+     */
+    public Cylinder<E, T> newCylinder(E stateEnum)
+    {
+        Cylinder<E, T> newCylinder = new Cylinder<>(stateEnum);
+        addCylinder(newCylinder);
+        return newCylinder;
+    }
+
+    /**
      * Represents a state definition
      *
      * @param <E> State enum type
@@ -214,24 +195,36 @@ public class FsmEngine<E, T>
     public static class Cylinder<E, T>
     {
         private final E stateEnum;
-        private final Class<? extends Action<E, T>> enterActionClass;
-        private final Class<? extends Action<E, T>> exitActionClass;
+        private Class<? extends Action<E, T>> enterActionClass;
+        private Class<? extends Action<E, T>> exitActionClass;
 
-        public Cylinder(E stateEnum)
-        {
-            this(stateEnum, null, null);
-        }
-
-        public Cylinder(E stateEnum, Class<? extends Action<E, T>> enterActionClass)
-        {
-            this(stateEnum, enterActionClass, null);
-        }
-
-        public Cylinder(E stateEnum, Class<? extends Action<E, T>> enterActionClass, Class<? extends Action<E, T>> exitActionClass)
+        private Cylinder(E stateEnum)
         {
             this.stateEnum = stateEnum;
+        }
+
+        private E getStateEnum() {
+            return stateEnum;
+        }
+
+        private Class<? extends Action<E, T>> getEnterActionClass() {
+            return enterActionClass;
+        }
+
+        private Class<? extends Action<E, T>> getExitActionClass() {
+            return exitActionClass;
+        }
+
+        public Cylinder<E,T> setEnterActionClass(Class<? extends Action<E, T>> enterActionClass)
+        {
             this.enterActionClass = enterActionClass;
+            return this;
+        }
+
+        public Cylinder<E,T> setExitActionClass(Class<? extends Action<E, T>> exitActionClass)
+        {
             this.exitActionClass = exitActionClass;
+            return this;
         }
     }
 
