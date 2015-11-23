@@ -11,12 +11,16 @@ import java.util.Map;
  */
 public class FsmEngine<E, T>
 {
-    // Fields Defs //
+    //=====================================================//
+    // Definition Fields
+    //=====================================================//
 
     private Map<E, Cylinder<E>> mCylinderMap = new HashMap<>();
     private Map<T, Trigger> mTriggerMap = new HashMap<>();
 
-    // Operating Fields //
+    //=====================================================//
+    // Operating Fields
+    //=====================================================//
 
     private Cylinder<E> mCurrentCylinder;
     /**
@@ -25,8 +29,9 @@ public class FsmEngine<E, T>
     private UnclassedDataType mCurrentCylindersData;
     private Observer<E> mObserver;
 
-
-    //====== Builder ======//
+    //=====================================================//
+    // Builder
+    //=====================================================//
 
     /**
      * @param <E> State enum type
@@ -69,7 +74,9 @@ public class FsmEngine<E, T>
         }
     }
 
-    //====== Running ======//
+    //=====================================================//
+    // Public interface
+    //=====================================================//
 
     /**
      * Switch to next state. If you want to enforce rules on state switching use {@link #trigger(Object, UnclassedDataType)} instead.
@@ -96,6 +103,16 @@ public class FsmEngine<E, T>
         throw new NotImplementedException();
     }
 
+    //=====================================================//
+    // Private interface
+    //=====================================================//
+
+    /**
+     * Execute (enter/exit) action
+     *
+     * @param actionClass
+     * @param input
+     */
     private void doAction(Class<? extends Action> actionClass, UnclassedDataType input)
     {
         try
@@ -111,7 +128,6 @@ public class FsmEngine<E, T>
         }
     }
 
-    //====== Adders ======//
 
     private void addCylinder(Cylinder<E> cylinder)
     {
@@ -128,7 +144,9 @@ public class FsmEngine<E, T>
         mTriggerMap.put(trigger.onTrigger, trigger);
     }
 
-    //====== Triggers ======//
+    //=====================================================//
+    // Triggers
+    //=====================================================//
 
     /**
      * External triggers
@@ -155,7 +173,9 @@ public class FsmEngine<E, T>
      */
     public enum NoTriggers{}
 
-    //====== Unclassed Data Type ======//
+    //=====================================================//
+    // Unclassed Data Type
+    //=====================================================//
 
     /**
      * General options when passing back state specific data
@@ -179,7 +199,9 @@ public class FsmEngine<E, T>
         }
     }
 
-    //====== Cylinder class ======//
+    //=====================================================//
+    // Cylinder class
+    //=====================================================//
 
     /**
      * Represents a state definition
@@ -210,9 +232,13 @@ public class FsmEngine<E, T>
         }
     }
 
-    //====== Action class ======//
+    //=====================================================//
+    // Action class
+    //=====================================================//
 
     /**
+     * Actions are defined at Engine definition time and represent Enter/Exit actions for a state.
+     *
      * Retain no-arg constructor as created with reflection. This means the class will need to be public also (and not a non-static inner class)
      */
     public abstract static class Action<E, T>
@@ -249,7 +275,9 @@ public class FsmEngine<E, T>
         abstract void run();
     }
 
-    //========= Observable ========//
+    //=====================================================//
+    // Observable
+    //=====================================================//
 
     public interface Observer<E>
     {
