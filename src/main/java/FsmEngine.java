@@ -4,7 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Finite State Machine
+ * Finite State Machine.
+ *
+ * {@link FsmEngine} is the FSM
+ * {@link FsmEngine.Cylinder} represents the states
+ * {@link FsmEngine.Trigger} represents allowed transitions
+ *
+ * All non-allowed transitions will throw once a trigger has been received.
+ *
+ * Very similar to other Java FSMs apart from you can pass an arbritrary data object around when firing triggers or when
+ * triggering state transitions from inside state-based actions.
  *
  * @param <E> State enum type
  * @param <T> Trigger events. Use {@link FsmEngine.NoTriggers} if there are no external triggers.
@@ -15,8 +24,14 @@ public class FsmEngine<E, T>
     // Definition Fields
     //=====================================================//
 
+    /**
+     * The states of this fsm
+     */
     private Map<E, Cylinder<E, T>> mCylinderMap = new HashMap<>();
-    private Map<T, Trigger> mTriggerMap = new HashMap<>();
+    /**
+     * Map of Trigger-events -> Map of fromStates -> Triggers
+     */
+    private Map<T, Map<E, Trigger<E, T>>> mTriggerMap = new HashMap<>();
 
     //=====================================================//
     // Operating Fields
@@ -33,6 +48,9 @@ public class FsmEngine<E, T>
     // Builder
     //=====================================================//
 
+    /**
+     * Keeps track of when started so FSM cannot be configured after this point.
+     */
     private boolean mStarted;
 
     public FsmEngine<E, T> start(E startingState)
@@ -69,8 +87,15 @@ public class FsmEngine<E, T>
 
     public void trigger(T triggerEnum, UnclassedDataType optionalInputData)
     {
-        //needs to get all trigger objects that can be used to move from the current state, enumerate them to see if any triggerEnums match, then perform the next state or throw
-        throw new NotImplementedException();
+        Map<E, Trigger<E, T>> triggersByEvent = mTriggerMap.get(triggerEnum);
+        if(triggersByEvent == null)
+            throw new NullPointerException("No Triggers exist for "+triggerEnum.toString());
+        Trigger<E, T> trigger = triggersByEvent.get(mCurrentCylinder.stateEnum);
+
+        if(trigger.toState == null)
+            return; //represents a safe to ignore trigger state
+        else
+            nextState(trigger.toState, optionalInputData);
     }
 
     //=====================================================//
@@ -98,21 +123,44 @@ public class FsmEngine<E, T>
         }
     }
 
-
+    /**
+     * Add configuration time {@link FsmEngine.Cylinder} which represent FSM states. Cant call after {@link #start(Object)} has been called.
+     *
+     * @param cylinder
+     * @return
+     */
     private FsmEngine<E, T> addCylinder(Cylinder<E, T> cylinder)
     {
+        if(mStarted)
+            throw new IllegalStateException("Cant configure after already started!");
         mCylinderMap.put(cylinder.stateEnum, cylinder);
         return this;
     }
 
     /**
-     * Only public interface once running!
+     * Add configuration time {@link FsmEngine.Trigger}. Cant call after {@link #start(Object)} has been called.
      *
      * @param trigger trigger def
      */
     public FsmEngine<E, T> addTrigger(Trigger<E, T> trigger)
     {
-        mTriggerMap.put(trigger.onTrigger, trigger);
+        if(mStarted)
+            throw new IllegalStateException("Cant configure after already started!");
+
+        Map<E, Trigger<E, T>> triggersForEvent = mTriggerMap.get(trigger.onTrigger);
+        if(triggersForEvent == null)
+        {
+            triggersForEvent = new HashMap<>();
+            mTriggerMap.put(trigger.onTrigger, triggersForEvent);
+        }
+        else
+        {
+            //check a trigger for this from-state does not already exist
+            if(triggersForEvent.get(trigger.fromState) != null)
+                throw new IllegalStateException("You have already defined a Trigger from this event/fromState combo");
+        }
+
+        triggersForEvent.put(trigger.fromState, trigger);
         return this;
     }
 
@@ -121,7 +169,7 @@ public class FsmEngine<E, T>
     //=====================================================//
 
     /**
-     * External triggers
+     * External triggers. An event that triggers a state transition based upon the existing state.
      *
      * @param <E>
      * @param <T>
@@ -132,11 +180,26 @@ public class FsmEngine<E, T>
         private final E toState;
         private final T onTrigger;
 
-        public Trigger(E fromState, E toState, T onTrigger)
+        /**
+         * @param onTrigger
+         * @param fromState
+         * @param toState can be null. If null will do nothing when this trigger received for the passed state.
+         */
+        private Trigger(T onTrigger, E fromState, E toState)
         {
+            this.onTrigger = onTrigger;
             this.fromState = fromState;
             this.toState = toState;
-            this.onTrigger = onTrigger;
+        }
+
+        public static <E, T> Trigger<E, T> changeStatesOn(T onTrigger, E fromState, E toState)
+        {
+            return new Trigger<>(onTrigger, fromState, toState);
+        }
+
+        public static <E, T> Trigger<E, T> ignoreTriggerOn(T onTrigger, E atState)
+        {
+            return new Trigger<>(onTrigger, atState, null);
         }
     }
 
@@ -191,6 +254,7 @@ public class FsmEngine<E, T>
      * Represents a state definition
      *
      * @param <E> State enum type
+     * @param <T> Trigger type
      */
     public static class Cylinder<E, T>
     {
