@@ -70,8 +70,8 @@ public class FsmEngine<E, T>
      */
     public final void nextState(E state, UnclassedDataType optionalInputData)
     {
-        if(mCurrentCylinder != null && mCurrentCylinder.exitActionClass != null)
-            doAction(mCurrentCylinder.exitActionClass, mCurrentCylindersData);
+        if(mCurrentCylinder != null && mCurrentCylinder.exitAction != null)
+            doAction(mCurrentCylinder.exitAction, mCurrentCylindersData);
 
         if(!mCylinderMap.containsKey(state))
             throw new NullPointerException(state.getClass().getName()+"."+state.toString()+" does not exist in map!");
@@ -84,8 +84,8 @@ public class FsmEngine<E, T>
                 throw new IllegalStateException("Current state requires input data whereas none has been passed: "+mCurrentCylinder.stateEnum+" | "+mCurrentCylinder.requiredDataType.getName());
 
         mCurrentCylindersData = optionalInputData;
-        if(mCurrentCylinder.enterActionClass != null)
-            doAction(mCurrentCylinder.enterActionClass, mCurrentCylindersData);
+        if(mCurrentCylinder.enterAction != null)
+            doAction(mCurrentCylinder.enterAction, mCurrentCylindersData);
 
         notifyObserver();
     }
@@ -110,14 +110,13 @@ public class FsmEngine<E, T>
     /**
      * Execute (enter/exit) action
      *
-     * @param actionClass Action to execute
+     * @param action Action to execute
      * @param input can be null
      */
-    private void doAction(Class<? extends Action<E, T>> actionClass, UnclassedDataType input)
+    private void doAction(Action<E, T> action, UnclassedDataType input)
     {
         try
         {
-            Action<E, T> action = actionClass.getConstructor().newInstance();
             action.setInputData(input);
             action.setFsm(this); //ignore unchecked - its quite hard to pass cyclinders with actions of the wrong type due to the <> used for cylinder def when using the builder
             action.run();
@@ -264,8 +263,8 @@ public class FsmEngine<E, T>
     public static class Cylinder<E, T>
     {
         private final E stateEnum;
-        private Class<? extends Action<E, T>> enterActionClass;
-        private Class<? extends Action<E, T>> exitActionClass;
+        private Action<E, T> enterAction;
+        private Action<E, T> exitAction;
         private Class<?> requiredDataType;
 
         private Cylinder(E stateEnum)
@@ -277,23 +276,23 @@ public class FsmEngine<E, T>
             return stateEnum;
         }
 
-        private Class<? extends Action<E, T>> getEnterActionClass() {
-            return enterActionClass;
+        public Action<E, T> getEnterAction() {
+            return enterAction;
         }
 
-        private Class<? extends Action<E, T>> getExitActionClass() {
-            return exitActionClass;
+        public Action<E, T> getExitAction() {
+            return exitAction;
         }
 
-        public Cylinder<E,T> setEnterActionClass(Class<? extends Action<E, T>> enterActionClass)
+        public Cylinder<E,T> setEnterAction(Action<E, T> enterAction)
         {
-            this.enterActionClass = enterActionClass;
+            this.enterAction = enterAction;
             return this;
         }
 
-        public Cylinder<E,T> setExitActionClass(Class<? extends Action<E, T>> exitActionClass)
+        public Cylinder<E,T> setExitAction(Action<E, T> exitAction)
         {
-            this.exitActionClass = exitActionClass;
+            this.exitAction = exitAction;
             return this;
         }
 

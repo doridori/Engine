@@ -22,7 +22,7 @@ public class ExampleLCEDef
 
     public ExampleLCEDef()
     {
-        mFsm.newCylinder(MainStates.LOADING).setEnterActionClass(LoadingEnterAction.class);
+        mFsm.newCylinder(MainStates.LOADING).setEnterAction(new LoadingEnterAction());
         mFsm.newCylinder(MainStates.CONTENT).setRequiredDataType(LoadedData.class);
         mFsm.newCylinder(MainStates.ERROR);
         mFsm.addTrigger(FsmEngine.Trigger.changeStatesOn(Triggers.FORCE_LOADED, MainStates.LOADING, MainStates.CONTENT));
