@@ -78,6 +78,13 @@ public class FsmEngine<E, T>
         if(!mCylinderMap.containsKey(state))
             throw new NullPointerException(state.getClass().getName()+"."+state.toString()+" does not exist in map!");
         mCurrentCylinder = mCylinderMap.get(state);
+
+        //data checking
+        if(mCurrentCylinder.requiredDataType == null && optionalInputData != null)
+            throw new IllegalStateException("Current state does not require any data whereas some has been passed: "+mCurrentCylinder.stateEnum+" | "+optionalInputData.getClass().getName());
+        if(mCurrentCylinder.requiredDataType != null && optionalInputData == null)
+                throw new IllegalStateException("Current state requires input data whereas none has been passed: "+mCurrentCylinder.stateEnum+" | "+mCurrentCylinder.requiredDataType.getName());
+
         mCurrentCylindersData = optionalInputData;
         if(mCurrentCylinder.enterActionClass != null)
             doAction(mCurrentCylinder.enterActionClass, mCurrentCylindersData);
@@ -261,6 +268,7 @@ public class FsmEngine<E, T>
         private final E stateEnum;
         private Class<? extends Action<E, T>> enterActionClass;
         private Class<? extends Action<E, T>> exitActionClass;
+        private Class<?> requiredDataType;
 
         private Cylinder(E stateEnum)
         {
@@ -288,6 +296,19 @@ public class FsmEngine<E, T>
         public Cylinder<E,T> setExitActionClass(Class<? extends Action<E, T>> exitActionClass)
         {
             this.exitActionClass = exitActionClass;
+            return this;
+        }
+
+        /**
+         * Optional. If this Cylinders {@link FsmEngine.Action} classes are expected a input data type you can specify
+         * it here. If this state is attempted to be created and the type was not passed an exception will be thrown.
+         *
+         * @param requiredDataType
+         * @return
+         */
+        public Cylinder<E,T> setRequiredDataType(Class<?> requiredDataType)
+        {
+            this.requiredDataType = requiredDataType;
             return this;
         }
     }

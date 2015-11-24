@@ -23,13 +23,13 @@ public class ExampleLCEDef
     public ExampleLCEDef()
     {
         mFsm.newCylinder(MainStates.LOADING).setEnterActionClass(LoadingEnterAction.class);
-        mFsm.newCylinder(MainStates.CONTENT);
+        mFsm.newCylinder(MainStates.CONTENT).setRequiredDataType(LoadedData.class);
         mFsm.newCylinder(MainStates.ERROR);
         mFsm.addTrigger(FsmEngine.Trigger.changeStatesOn(Triggers.FORCE_LOADED, MainStates.LOADING, MainStates.CONTENT));
         mFsm.start(MainStates.LOADING);
 
         //example trigger
-        mFsm.trigger(Triggers.FORCE_LOADED, null);
+        //mFsm.trigger(Triggers.FORCE_LOADED, new LoadedData("Forced data loaded by trigger"));
     }
 
     //=====================================================//
@@ -53,7 +53,7 @@ public class ExampleLCEDef
             System.out.println("Running Loading!");
 
             //example of normal state transition
-            //getFsm().nextState(MainStates.CONTENT, new LoadedData("FakeLoadedData!"));
+            getFsm().nextState(MainStates.CONTENT, new LoadedData("FakeLoadedData!"));
         }
     }
 
@@ -65,9 +65,9 @@ public class ExampleLCEDef
     {
         public final String someLoadedData;
 
-        public LoadedData(String mSomeLoadedData)
+        public LoadedData(String someLoadedData)
         {
-            this.someLoadedData = mSomeLoadedData;
+            this.someLoadedData = someLoadedData;
         }
     }
 }
