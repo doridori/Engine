@@ -63,6 +63,16 @@ public class FsmEngine<E, T>
     //=====================================================//
 
     /**
+     * Calls {@link #nextState(Object, UnclassedDataType)} with null input data.
+     *
+     * @param state
+     */
+    public final void nextState(E state)
+    {
+        nextState(state, null);
+    }
+
+    /**
      * Switch to next state. If you want to enforce rules on state switching use {@link #trigger(Object, UnclassedDataType)} instead.
      *
      * @param state state to move to
