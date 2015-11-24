@@ -66,7 +66,7 @@ public class FsmEngine<E, T>
      * Switch to next state. If you want to enforce rules on state switching use {@link #trigger(Object, UnclassedDataType)} instead.
      *
      * @param state state to move to
-     * @param optionalInputData can be null. Will be passed to next states {@link FsmEngine.Action} classed
+     * @param optionalInputData can be null. Will be passed to next states {@link Action} classed
      */
     public final void nextState(E state, UnclassedDataType optionalInputData)
     {
@@ -110,7 +110,7 @@ public class FsmEngine<E, T>
     /**
      * Execute (enter/exit) action
      *
-     * @param action Action to execute
+     * @param action FsmEngine.Action to execute
      * @param input can be null
      */
     private void doAction(Action<E, T> action, UnclassedDataType input)
@@ -297,7 +297,7 @@ public class FsmEngine<E, T>
         }
 
         /**
-         * Optional. If this Cylinders {@link FsmEngine.Action} classes are expected a input data type you can specify
+         * Optional. If this Cylinders {@link Action} classes are expected a input data type you can specify
          * it here. If this state is attempted to be created and the type was not passed an exception will be thrown.
          *
          * @param requiredDataType
@@ -311,7 +311,7 @@ public class FsmEngine<E, T>
     }
 
     //=====================================================//
-    // Action class
+    // FsmEngine.Action class
     //=====================================================//
 
     /**
@@ -380,4 +380,6 @@ public class FsmEngine<E, T>
         if(mObserver != null && mCurrentCylinder != null)
             mObserver.currentState(mCurrentCylinder.stateEnum, mCurrentCylindersData);
     }
+
+
 }
