@@ -1,7 +1,8 @@
 apply plugin: 'java'
+apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.7
-version = '0.9'
+version = '0.9.0'
 
 task wrapper(type: Wrapper) {
   gradleVersion = '2.3'
@@ -14,4 +15,15 @@ repositories {
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile 'org.mockito:mockito-all:1.10.19'
+}
+
+publishing {
+    publications {
+        releaseJar(MavenPublication) {
+            groupId 'com.kodroid'
+            artifactId 'engine'
+
+            from components.java
+        }
+    }
 }
