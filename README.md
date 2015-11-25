@@ -1,7 +1,7 @@
 Engine
 ======
 
-A Finite State Machine for Java.
+An Observable Finite State Machine for Java.
 
 Similar to other FSMs out there. This has been designed with a terse interface in mind and also supports optional arbritrary data objects for each `Cylinder` (state), which can be accessed via a `Cylinders` `Actions` (enter / exit). 
 
