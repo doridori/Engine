@@ -186,12 +186,11 @@ public class FsmEngine<E, T>
      * @param action FsmEngine.Action to execute
      * @param optionalInputData can be null
      */
-    private void doAction(Action<E, T> action, Object optionalInputData)
+    private void doAction(Action action, Object optionalInputData)
     {
         try
         {
             action.setInputData(optionalInputData);
-            action.setFsm(this); //ignore unchecked - its quite hard to pass cyclinders with actions of the wrong type due to the <> used for cylinder def when using the builder
             action.run();
         }
         catch (Exception e)
@@ -314,8 +313,8 @@ public class FsmEngine<E, T>
     public static class Cylinder<E, T>
     {
         private final E stateEnum;
-        private Action<E, T> enterAction;
-        private Action<E, T> exitAction;
+        private Action enterAction;
+        private Action exitAction;
         private Class<?> requiredDataType;
 
         private Cylinder(E stateEnum)
@@ -327,13 +326,13 @@ public class FsmEngine<E, T>
             return stateEnum;
         }
 
-        public Cylinder<E,T> setEnterAction(Action<E, T> enterAction)
+        public Cylinder<E,T> setEnterAction(Action enterAction)
         {
             this.enterAction = enterAction;
             return this;
         }
 
-        public Cylinder<E,T> setExitAction(Action<E, T> exitAction)
+        public Cylinder<E,T> setExitAction(Action exitAction)
         {
             this.exitAction = exitAction;
             return this;
@@ -362,10 +361,9 @@ public class FsmEngine<E, T>
      *
      * Retain no-arg constructor as created with reflection. This means the class will need to be public also (and not a non-static inner class)
      */
-    public abstract static class Action<E, T>
+    public abstract static class Action
     {
         private Object optionalInputData;
-        private FsmEngine<E, T> mFsm;
 
         /**
          * Optional data object that can be used by this action
@@ -383,14 +381,6 @@ public class FsmEngine<E, T>
         public Object getOptionalInputData()
         {
             return optionalInputData;
-        }
-
-        public FsmEngine<E, T> getFsm() {
-            return mFsm;
-        }
-
-        void setFsm(FsmEngine<E, T> fsm) {
-            this.mFsm = fsm;
         }
 
         abstract void run();

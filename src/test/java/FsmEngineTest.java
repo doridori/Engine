@@ -8,9 +8,6 @@ import org.mockito.Mockito;
 @RunWith(JUnit4.class)
 public class FsmEngineTest
 {
-    //TODO test race conditions
-
-
     enum TestStates
     {
         ONE, TWO, THREE;
@@ -145,18 +142,18 @@ public class FsmEngineTest
     public void nextState_raceConditionsOnSwitchingStatesInsideEnterActions_AllEnterAndExitActionsCalledInCorrectOrderAndCorrectData()
     {
         //setup
-        FsmEngine<TestStates, FsmEngine.NoTriggers> fsm = new FsmEngine<>();
+        final FsmEngine<TestStates, FsmEngine.NoTriggers> fsm = new FsmEngine<>();
 
         //one
-        FsmEngine.Action<TestStates, FsmEngine.NoTriggers> enterActionOne = new FsmEngine.Action<TestStates, FsmEngine.NoTriggers>() {
+        FsmEngine.Action enterActionOne = new FsmEngine.Action() {
             @Override
             void run() {
                 Assert.assertEquals(getOptionalInputData().getClass(), String.class);
-                getFsm().nextState(TestStates.TWO, new Integer(2));
+                fsm.nextState(TestStates.TWO, new Integer(2));
             }
         };
 
-        FsmEngine.Action<TestStates, FsmEngine.NoTriggers> exitActionOne = new FsmEngine.Action<TestStates, FsmEngine.NoTriggers>() {
+        FsmEngine.Action exitActionOne = new FsmEngine.Action() {
             @Override
             void run() {
                 Assert.assertEquals(getOptionalInputData().getClass(), String.class);
@@ -168,15 +165,15 @@ public class FsmEngineTest
         fsm.defineCylinder(TestStates.ONE).setEnterAction(spyEnterActionOne).setExitAction(spyExitActionOne).setRequiredDataType(String.class);
 
         //two
-        FsmEngine.Action<TestStates, FsmEngine.NoTriggers> enterActionTwo = new FsmEngine.Action<TestStates, FsmEngine.NoTriggers>() {
+        FsmEngine.Action enterActionTwo = new FsmEngine.Action() {
             @Override
             void run() {
                 Assert.assertEquals(getOptionalInputData().getClass(), Integer.class);
-                getFsm().nextState(TestStates.THREE, new Long(3));
+                fsm.nextState(TestStates.THREE, new Long(3));
             }
         };
 
-        FsmEngine.Action<TestStates, FsmEngine.NoTriggers> exitActionTwo = new FsmEngine.Action<TestStates, FsmEngine.NoTriggers>() {
+        FsmEngine.Action exitActionTwo = new FsmEngine.Action() {
             @Override
             void run() {
                 Assert.assertEquals(getOptionalInputData().getClass(), Integer.class);
