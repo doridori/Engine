@@ -10,7 +10,7 @@ import java.util.Map;
  *
  * All non-allowed transitions will throw once a trigger has been received.
  *
- * Very similar to other Java FSMs apart from you can pass an arbritrary data object around when firing triggers or when
+ * Very similar to other Java FSMs apart from you can pass an arbitrary data object around when firing triggers or when
  * triggering state transitions from inside state-based actions.
  *
  * @param <E> State enum type
@@ -38,8 +38,15 @@ public class FsmEngine<E, T>
     private Cylinder<E, T> mCurrentCylinder;
     /**
      * May be null
+     *
+     * General options when passing back state specific data
+     *
+     * 1. Use a Map / Bundle approach - runtime checked if data exists and KEY constants need to be defined. Not using due to extra key def needed.
+     * 2. Use a compile-time checked approach. Not using as results in more verbose state definitions (i.e. a type method per state and state enumerating interface definitions as per the Visitor pattern). See https://github.com/doridori/Dynamohttps://github.com/doridori/Dynamo for an example of this. Has its places but not ideal for small state machines with minimal/no data per state.
+     * 3. Casting, which will auto-cast out to the expected type (essentially a cast with slightly improved error reporting). Runtime checked. This lib uses this approach as the focus is a lean state-machine. Essentially shifts the implementation checking away from the compiler and into your tests. Most of time time I find there isn`t any data to pass so type safety was not worth the massive amounts of boilerplate!
      */
-    private UnclassedDataType mCurrentCylindersData;
+    private Object mCurrentCylindersData;
+
     private Observer<E> mObserver;
 
     //=====================================================//
@@ -76,15 +83,27 @@ public class FsmEngine<E, T>
     }
 
     /**
-     * Start this FSM at the passed in state. Can only be called once. {@link #defineCylinder(Object)} and {@link #defineTrigger(Object, Object, Object)} cannot be called after this point.
+     * Calls through to {@link #start(Object, Object)} will null as the optionalInputData
      *
      * @param startingState
      * @return
      */
     public FsmEngine<E, T> start(E startingState)
     {
+        return start(startingState, null);
+    }
+
+    /**
+     * Start this FSM at the passed in state. Can only be called once. {@link #defineCylinder(Object)} and {@link #defineTrigger(Object, Object, Object)} cannot be called after this point.
+     *
+     * @param startingState
+     * @param optionalInputData
+     * @return
+     */
+    public FsmEngine<E, T> start(E startingState, Object optionalInputData)
+    {
         mStarted = true;
-        nextState(startingState, null);
+        nextState(startingState, optionalInputData);
         return this;
     }
 
@@ -93,7 +112,7 @@ public class FsmEngine<E, T>
     //=====================================================//
 
     /**
-     * Calls {@link #nextState(Object, UnclassedDataType)} with null input data.
+     * Calls {@link #nextState(Object, Object)} with null input data.
      *
      * @param state
      */
@@ -103,13 +122,16 @@ public class FsmEngine<E, T>
     }
 
     /**
-     * Switch to next state. If you want to enforce rules on state switching use {@link #trigger(Object, UnclassedDataType)} instead.
+     * Switch to next state. If you want to enforce rules on state switching use {@link #trigger(Object, Object)} instead.
      *
      * @param state state to move to
-     * @param optionalInputData can be null. Will be passed to next states {@link Action} classed
+     * @param optionalInputData can be null. Will be passed to next states {@link Action} classes.
      */
-    public final void nextState(E state, UnclassedDataType optionalInputData)
+    public final void nextState(E state, Object optionalInputData)
     {
+        if(!mStarted)
+            throw new IllegalStateException("Not started!");
+
         if(mCurrentCylinder != null && mCurrentCylinder.exitAction != null)
             doAction(mCurrentCylinder.exitAction, mCurrentCylindersData);
 
@@ -134,14 +156,19 @@ public class FsmEngine<E, T>
      * Incoming trigger event. Will need to match a trigger that has been setup
      *
      * @param triggerEnum
-     * @param optionalInputData
+     * @param optionalInputData can be null. Will be passed to next states {@link Action} classes.
      */
-    public void trigger(T triggerEnum, UnclassedDataType optionalInputData)
+    public void trigger(T triggerEnum, Object optionalInputData)
     {
+        if(!mStarted)
+            throw new IllegalStateException("Not started!");
+
         Map<E, Trigger<E, T>> triggersByEvent = mTriggerMap.get(triggerEnum);
         if(triggersByEvent == null)
             throw new NullPointerException("No Triggers exist for "+triggerEnum.toString());
         Trigger<E, T> trigger = triggersByEvent.get(mCurrentCylinder.stateEnum);
+        if(trigger == null)
+            throw new IllegalStateException("Trigger "+triggerEnum+" received but trigger not defined for current state :"+mCurrentCylinder.getStateEnum());
 
         if(trigger.toState == null)
             return; //represents a safe to ignore trigger state
@@ -157,13 +184,13 @@ public class FsmEngine<E, T>
      * Execute (enter/exit) action
      *
      * @param action FsmEngine.Action to execute
-     * @param input can be null
+     * @param optionalInputData can be null
      */
-    private void doAction(Action<E, T> action, UnclassedDataType input)
+    private void doAction(Action<E, T> action, Object optionalInputData)
     {
         try
         {
-            action.setInputData(input);
+            action.setInputData(optionalInputData);
             action.setFsm(this); //ignore unchecked - its quite hard to pass cyclinders with actions of the wrong type due to the <> used for cylinder def when using the builder
             action.run();
         }
@@ -174,7 +201,7 @@ public class FsmEngine<E, T>
     }
 
     /**
-     * Add configuration time {@link FsmEngine.Cylinder} which represent FSM states. Cant call after {@link #start(Object)} has been called.
+     * Add configuration time {@link FsmEngine.Cylinder} which represent FSM states. Cant call after {@link #start(Object, Object)} has been called.
      *
      * @param cylinder
      * @return
@@ -188,7 +215,7 @@ public class FsmEngine<E, T>
     }
 
     /**
-     * Add configuration time {@link FsmEngine.Trigger}. Cant call after {@link #start(Object)} has been called.
+     * Add configuration time {@link FsmEngine.Trigger}. Cant call after {@link #start(Object, Object)} has been called.
      *
      * @param trigger trigger def
      */
@@ -249,31 +276,30 @@ public class FsmEngine<E, T>
     public enum NoTriggers{}
 
     //=====================================================//
-    // Unclassed Data Type
+    // Cast util
     //=====================================================//
 
     /**
-     * General options when passing back state specific data
+     * Optional method to save manual casting of state data.
      *
-     * 1. Use a Map / Bundle approach - runtime checked if data exists and KEY constants need to be defined. Not using due to extra key def needed.
-     * 2. Use a compile-time checked approach. Not using as results in more verbose state definitions (i.e. a type method per state and state enumerating interface definitions as per the Visitor pattern). See https://github.com/doridori/Dynamohttps://github.com/doridori/Dynamo for an example of this. Has its places but not ideal for small state machines with minimal/no data per state.
-     * 3. Casting, which will auto-cast out to the expected type (essentially a cast with slightly improved error reporting). Runtime checked. This lib uses this approach as the focus is a lean state-machine. Essentially shifts the implementation checking away from the compiler and into your tests. Most of time time I find there isn`t any data to pass so type safety was not worth the massive amounts of boilerplate!
+     * @param in
+     * @param clazz
+     * @param <C>
+     * @return
      */
     @SuppressWarnings("unchecked")
-    public static abstract class UnclassedDataType
+    public static <C> C getAsType(Object in, Class<C> clazz)
     {
-        public <T> T getAsType(Class<T> clazz)
+        try
         {
-            try
-            {
-                return (T) this;
-            }
-            catch(ClassCastException e)
-            {
-                throw new RuntimeException("Trying to cast "+this.getClass().getName()+" to "+clazz.getName());
-            }
+            return (C) in;
+        }
+        catch(ClassCastException e)
+        {
+            throw new RuntimeException("Trying to cast "+in.getClass().getName()+" to "+clazz.getName());
         }
     }
+
 
     //=====================================================//
     // Cylinder class
@@ -299,14 +325,6 @@ public class FsmEngine<E, T>
 
         private E getStateEnum() {
             return stateEnum;
-        }
-
-        public Action<E, T> getEnterAction() {
-            return enterAction;
-        }
-
-        public Action<E, T> getExitAction() {
-            return exitAction;
         }
 
         public Cylinder<E,T> setEnterAction(Action<E, T> enterAction)
@@ -346,25 +364,25 @@ public class FsmEngine<E, T>
      */
     public abstract static class Action<E, T>
     {
-        private UnclassedDataType unclassedDataType;
+        private Object optionalInputData;
         private FsmEngine<E, T> mFsm;
 
         /**
          * Optional data object that can be used by this action
          *
-         * @param unclassedDataType can be null
+         * @param optionalInputData can be null
          */
-        void setInputData(UnclassedDataType unclassedDataType)
+        void setInputData(Object optionalInputData)
         {
-            this.unclassedDataType = unclassedDataType;
+            this.optionalInputData = optionalInputData;
         }
 
         /**
          * @return Data associated with the containing state - may be null
          */
-        public UnclassedDataType getUnclassedDataType()
+        public Object getOptionalInputData()
         {
-            return unclassedDataType;
+            return optionalInputData;
         }
 
         public FsmEngine<E, T> getFsm() {
@@ -386,9 +404,9 @@ public class FsmEngine<E, T>
     {
         /**
          * @param state state enum
-         * @param unclassedDataType may be null - should be documented as part of fsm implementation
+         * @param optionalStateData may be null - should be documented as part of fsm implementation (alongside state enums would make sense)
          */
-        void currentState(E state, UnclassedDataType unclassedDataType);
+        void currentState(E state, Object optionalStateData);
     }
 
     /**
