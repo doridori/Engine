@@ -1,8 +1,11 @@
-# Engine
+Engine
+======
 
-A Finite State Machine for Java
+A Finite State Machine for Java.
 
-Simple to use. See the tests for some examples
+Similar to other FSMs out there. This as been designed for a terse interface and also supports optional arbritrary data objects for each `Cylinder` (state), which can be accessed via a `Cylinders` `Actions` (enter / exit). 
+
+Simple to use. See the [tests](https://github.com/doridori/Engine/blob/master/src/test/java/FsmEngineTest.java) for some examples
 
 ```java
 FsmEngine<TestStates, TestTriggers> fsm = new FsmEngine<>();
@@ -13,3 +16,19 @@ fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE, TestStates.TWO);
 fsm.start(TestStates.ONE);
 ```
 
+License
+=======
+
+    Copyright 2015 Dorian Cussen
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
