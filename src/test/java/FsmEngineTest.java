@@ -32,12 +32,12 @@ public class FsmEngineTest
         //setup
         FsmEngine<TestStates, FsmEngine.NoTriggers> fsm = new FsmEngine<>();
         FsmEngine.Action mockEnterAction = Mockito.mock(FsmEngine.Action.class);
-        fsm.newCylinder(TestStates.ONE).setEnterAction(mockEnterAction);
-        fsm.newCylinder(TestStates.TWO);
+        fsm.defineCylinder(TestStates.ONE).setEnterAction(mockEnterAction);
+        fsm.defineCylinder(TestStates.TWO);
         fsm.start(TestStates.ONE);
 
         //test
-        Mockito.verify(mockEnterAction).run();
+        Mockito.verify(mockEnterAction, Mockito.times(1)).run();
     }
 
     @Test
@@ -46,14 +46,14 @@ public class FsmEngineTest
         //setup
         FsmEngine<TestStates, FsmEngine.NoTriggers> fsm = new FsmEngine<>();
         FsmEngine.Action mockExitAction = Mockito.mock(FsmEngine.Action.class);
-        fsm.newCylinder(TestStates.ONE).setExitAction(mockExitAction);
-        fsm.newCylinder(TestStates.TWO);
+        fsm.defineCylinder(TestStates.ONE).setExitAction(mockExitAction);
+        fsm.defineCylinder(TestStates.TWO);
         fsm.start(TestStates.ONE);
 
         //test
         Mockito.verifyZeroInteractions(mockExitAction);
         fsm.nextState(TestStates.TWO);
-        Mockito.verify(mockExitAction).run();
+        Mockito.verify(mockExitAction, Mockito.times(1)).run();
     }
 
     //=====================================================//
@@ -66,13 +66,15 @@ public class FsmEngineTest
         //setup
         FsmEngine<TestStates, TestTriggers> fsm = new FsmEngine<>();
         FsmEngine.Action mockEnterAction = Mockito.mock(FsmEngine.Action.class);
-        fsm.newCylinder(TestStates.ONE);
-        fsm.newCylinder(TestStates.TWO).setEnterAction(mockEnterAction);
-        fsm.addTrigger(new FsmEngine.Trigger<TestStates, TestTriggers>()) //todo improve trigger declaration so creates object internally with correct typing
+        fsm.defineCylinder(TestStates.ONE);
+        fsm.defineCylinder(TestStates.TWO).setEnterAction(mockEnterAction);
+        fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE, TestStates.TWO);
         fsm.start(TestStates.ONE);
 
         //test
-        Mockito.verify(mockEnterAction).run();
+        Mockito.verify(mockEnterAction, Mockito.never()).run();
+        fsm.trigger(TestTriggers.TRIGGER_ONE, null);
+        Mockito.verify(mockEnterAction, Mockito.times(1)).run();
     }
 
 }

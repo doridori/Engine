@@ -51,6 +51,36 @@ public class FsmEngine<E, T>
      */
     private boolean mStarted;
 
+    /**
+     * Define a new Cylinder representing a state of this FSM
+     * @return
+     */
+    public Cylinder<E, T> defineCylinder(E stateEnum)
+    {
+        Cylinder<E, T> newCylinder = new Cylinder<>(stateEnum);
+        addCylinder(newCylinder);
+        return newCylinder;
+    }
+
+    /**
+     * Define a new Trigger representing an input event to this FSM
+     *
+     * @param onTrigger
+     * @param fromState
+     * @param toState
+     */
+    public void defineTrigger(T onTrigger, E fromState, E toState)
+    {
+        Trigger<E, T> newTrigger = new Trigger<>(onTrigger, fromState, toState);
+        addTrigger(newTrigger);
+    }
+
+    /**
+     * Start this FSM at the passed in state. Can only be called once. {@link #defineCylinder(Object)} and {@link #defineTrigger(Object, Object, Object)} cannot be called after this point.
+     *
+     * @param startingState
+     * @return
+     */
     public FsmEngine<E, T> start(E startingState)
     {
         mStarted = true;
@@ -100,6 +130,12 @@ public class FsmEngine<E, T>
         notifyObserver();
     }
 
+    /**
+     * Incoming trigger event. Will need to match a trigger that has been setup
+     *
+     * @param triggerEnum
+     * @param optionalInputData
+     */
     public void trigger(T triggerEnum, UnclassedDataType optionalInputData)
     {
         Map<E, Trigger<E, T>> triggersByEvent = mTriggerMap.get(triggerEnum);
@@ -156,7 +192,7 @@ public class FsmEngine<E, T>
      *
      * @param trigger trigger def
      */
-    public FsmEngine<E, T> addTrigger(Trigger<E, T> trigger)
+    private FsmEngine<E, T> addTrigger(Trigger<E, T> trigger)
     {
         if(mStarted)
             throw new IllegalStateException("Cant configure after already started!");
@@ -188,7 +224,7 @@ public class FsmEngine<E, T>
      * @param <E>
      * @param <T>
      */
-    public static class Trigger<E, T>
+    private static class Trigger<E, T>
     {
         private final E fromState;
         private final E toState;
@@ -199,21 +235,11 @@ public class FsmEngine<E, T>
          * @param fromState
          * @param toState can be null. If null will do nothing when this trigger received for the passed state.
          */
-        private Trigger(T onTrigger, E fromState, E toState)
+        Trigger(T onTrigger, E fromState, E toState)
         {
             this.onTrigger = onTrigger;
             this.fromState = fromState;
             this.toState = toState;
-        }
-
-        public static <E, T> Trigger<E, T> changeStatesOn(T onTrigger, E fromState, E toState)
-        {
-            return new Trigger<>(onTrigger, fromState, toState);
-        }
-
-        public static <E, T> Trigger<E, T> ignoreTriggerOn(T onTrigger, E atState)
-        {
-            return new Trigger<>(onTrigger, atState, null);
         }
     }
 
@@ -252,17 +278,6 @@ public class FsmEngine<E, T>
     //=====================================================//
     // Cylinder class
     //=====================================================//
-
-    /**
-     * Create a new Typed Cylinder
-     * @return
-     */
-    public Cylinder<E, T> newCylinder(E stateEnum)
-    {
-        Cylinder<E, T> newCylinder = new Cylinder<>(stateEnum);
-        addCylinder(newCylinder);
-        return newCylinder;
-    }
 
     /**
      * Represents a state definition
