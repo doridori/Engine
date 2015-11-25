@@ -3,7 +3,7 @@ Engine
 
 A Finite State Machine for Java.
 
-Similar to other FSMs out there. This has been designed with a terse interface (which in places means it leans towards some runtime type checking) in mind and also supports optional arbritrary data objects for each `Cylinder` (state), which can be accessed via a `Cylinders` `Actions` (enter / exit). 
+Similar to other FSMs out there. This has been designed with a terse interface in mind and also supports optional arbritrary data objects for each `Cylinder` (state), which can be accessed via a `Cylinders` `Actions` (enter / exit). 
 
 Simple to use. See the [tests](https://github.com/doridori/Engine/blob/master/src/test/java/FsmEngineTest.java) for some examples
 
