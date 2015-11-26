@@ -385,7 +385,7 @@ public class FsmEngine<E, T>
             return optionalInputData;
         }
 
-        abstract void run();
+        public abstract void run();
     }
 
     //=====================================================//
