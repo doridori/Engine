@@ -1,12 +1,56 @@
+plugins {
+    id "com.jfrog.bintray" version "1.4"
+}
+
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 
+//=====================================================//
+// Version
+//=====================================================//
+
+def _versionNum = '0.9.1'
+version = _versionNum
+
+//=====================================================//
+// Bintray
+//=====================================================//
+
+
+bintray {
+    //lives in gradle.properties
+    user = bintray_user
+    key = bintray_api_key
+    publications = ['releaseJar']
+    pkg {
+        repo = 'maven'
+        name = 'Engine'
+        desc = 'A lightweight Finite State Machine for Java'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/doridori/Engine'
+        version {
+            name = _versionNum
+        }
+    }
+}
+
+//=====================================================//
+// Java
+//=====================================================//
+
 sourceCompatibility = 1.7
-version = '0.9.0'
+
+//=====================================================//
+// Wrapper
+//=====================================================//
 
 task wrapper(type: Wrapper) {
   gradleVersion = '2.3'
 }
+
+//=====================================================//
+// Dependencies
+//=====================================================//
 
 repositories {
     mavenCentral()
@@ -17,6 +61,14 @@ dependencies {
     testCompile 'org.mockito:mockito-all:1.10.19'
 }
 
+//=====================================================//
+// Publishing
+//=====================================================//
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
+
 publishing {
     publications {
         releaseJar(MavenPublication) {
@@ -24,6 +76,10 @@ publishing {
             artifactId 'engine'
 
             from components.java
+
+            artifact sourceJar {
+                classifier "sources"
+            }
         }
     }
 }
