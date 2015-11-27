@@ -27,7 +27,7 @@ repositories {
 ...
 
 dependencies {
-    compile 'com.kodroid:engine:x.y.z'
+    compile 'com.kodroid:engine:0.9.3'
 }
 ```
 
