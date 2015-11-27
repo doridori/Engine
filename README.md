@@ -16,6 +16,21 @@ fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE, TestStates.TWO);
 fsm.start(TestStates.ONE);
 ```
 
+Usage
+=====
+
+```gradle
+...
+repositories {
+    jcenter()
+}
+...
+
+dependencies {
+    compile 'com.kodroid:engine:x.y.z'
+}
+```
+
 License
 =======
 
