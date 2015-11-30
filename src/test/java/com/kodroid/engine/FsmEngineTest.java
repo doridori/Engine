@@ -54,6 +54,25 @@ public class FsmEngineTest
         Mockito.verify(mockExitAction, Mockito.times(1)).run();
     }
 
+    @Test
+    public void nextState_dataPassed_actionHasAccessToData()
+    {
+        //setup
+        FsmEngine<TestStates, FsmEngine.NoTriggers> fsm = new FsmEngine<>();
+        FsmEngine.Action action = new FsmEngine.Action() {
+            @Override
+            public void run() {
+                Assert.assertEquals("TestString", getOptionalInputDataAs(String.class));
+            }
+        };
+        FsmEngine.Action spyAction = Mockito.spy(action);
+        fsm.defineCylinder(TestStates.ONE).setEnterAction(spyAction).setRequiredDataType(String.class);
+        fsm.start(TestStates.ONE, "TestString");
+
+        //test
+        Mockito.verify(spyAction, Mockito.times(1)).run();
+    }
+
     //=====================================================//
     // Triggers (+ Observers & Data Passing)
     //=====================================================//

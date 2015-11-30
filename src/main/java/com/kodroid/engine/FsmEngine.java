@@ -344,32 +344,6 @@ public class FsmEngine<E, T>
     public enum NoTriggers{}
 
     //=====================================================//
-    // Cast util
-    //=====================================================//
-
-    /**
-     * Optional method to save manual casting of state data.
-     *
-     * @param in
-     * @param clazz
-     * @param <C>
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public static <C> C getAsType(Object in, Class<C> clazz)
-    {
-        try
-        {
-            return (C) in;
-        }
-        catch(ClassCastException e)
-        {
-            throw new RuntimeException("Trying to cast "+in.getClass().getName()+" to "+clazz.getName());
-        }
-    }
-
-
-    //=====================================================//
     // Cylinder class
     //=====================================================//
 
@@ -450,6 +424,24 @@ public class FsmEngine<E, T>
         public Object getOptionalInputData()
         {
             return optionalInputData;
+        }
+
+        /**
+         * Optional method to save manual casting of state data.
+         */
+        @SuppressWarnings("unchecked")
+        public <C> C getOptionalInputDataAs(Class<C> clazz)
+        {
+            try
+            {
+                if(optionalInputData == null)
+                    throw new NullPointerException("optionalInputData == null");
+                return (C) optionalInputData;
+            }
+            catch(ClassCastException e)
+            {
+                throw new RuntimeException("Trying to cast "+optionalInputData.getClass().getName()+" to "+clazz.getName());
+            }
         }
 
         public abstract void run();

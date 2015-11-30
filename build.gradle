@@ -9,7 +9,7 @@ apply plugin: 'maven-publish'
 // Version
 //=====================================================//
 
-def _versionNum = '0.9.4'
+def _versionNum = '0.9.5'
 version = _versionNum
 
 //=====================================================//
