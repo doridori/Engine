@@ -66,7 +66,7 @@ public class FsmEngineTest
         FsmEngine.Action mockEnterAction = Mockito.mock(FsmEngine.Action.class);
         fsm.defineCylinder(TestStates.ONE);
         fsm.defineCylinder(TestStates.TWO).setEnterAction(mockEnterAction);
-        fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE, TestStates.TWO);
+        fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE).setToState(TestStates.TWO);
         fsm.start(TestStates.ONE);
 
         //test
@@ -83,7 +83,7 @@ public class FsmEngineTest
         FsmEngine.Action mockEnterAction = Mockito.mock(FsmEngine.Action.class);
         fsm.defineCylinder(TestStates.ONE);
         fsm.defineCylinder(TestStates.TWO).setEnterAction(mockEnterAction).setRequiredDataType(String.class);
-        fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE, TestStates.TWO);
+        fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE).setToState(TestStates.TWO);
         fsm.start(TestStates.ONE);
 
         //test
@@ -106,7 +106,7 @@ public class FsmEngineTest
         FsmEngine.Action mockEnterAction = Mockito.mock(FsmEngine.Action.class);
         fsm.defineCylinder(TestStates.ONE);
         fsm.defineCylinder(TestStates.TWO).setEnterAction(mockEnterAction);
-        fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE, null); //ignore
+        fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE); //ignore
         fsm.start(TestStates.ONE);
 
         //test
@@ -127,13 +127,57 @@ public class FsmEngineTest
         FsmEngine.Action mockEnterAction = Mockito.mock(FsmEngine.Action.class);
         fsm.defineCylinder(TestStates.ONE);
         fsm.defineCylinder(TestStates.TWO).setEnterAction(mockEnterAction);
-        fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.TWO, null);
+        fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.TWO);
         fsm.start(TestStates.ONE);
 
         //test
         Mockito.verify(mockEnterAction, Mockito.never()).run();
         fsm.trigger(TestTriggers.TRIGGER_ONE, null);
         Mockito.verify(mockEnterAction, Mockito.times(1)).run();
+    }
+
+    @Test
+    public void trigger_withAction_shouldExecuteAction()
+    {
+        //setup
+        FsmEngine<TestStates, TestTriggers> fsm = new FsmEngine<>();
+        fsm.defineCylinder(TestStates.ONE);
+        FsmEngine.Action mockTriggerAction = Mockito.mock(FsmEngine.Action.class);
+        fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE).setAction(mockTriggerAction);
+        fsm.start(TestStates.ONE);
+
+        //test
+        Mockito.verify(mockTriggerAction, Mockito.never()).run();
+        fsm.trigger(TestTriggers.TRIGGER_ONE, null);
+        Mockito.verify(mockTriggerAction, Mockito.times(1)).run();
+    }
+
+    @Test
+    public void trigger_withActionAndData_shouldExecuteActionWithTriggerData()
+    {
+        FsmEngine<TestStates, TestTriggers> fsm = new FsmEngine<>();
+        fsm.defineCylinder(TestStates.ONE);
+        FsmEngine.Action mockTriggerAction = Mockito.mock(FsmEngine.Action.class);
+        fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE).setAction(mockTriggerAction).setRequiredDataType(Integer.class);
+        fsm.start(TestStates.ONE);
+
+        //test
+        Mockito.verify(mockTriggerAction, Mockito.never()).run();
+        fsm.trigger(TestTriggers.TRIGGER_ONE, new Integer(100));
+        Mockito.verify(mockTriggerAction, Mockito.times(1)).run();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void trigger_withActionAndWrongData_shouldThrow()
+    {
+        FsmEngine<TestStates, TestTriggers> fsm = new FsmEngine<>();
+        fsm.defineCylinder(TestStates.ONE);
+        FsmEngine.Action mockTriggerAction = Mockito.mock(FsmEngine.Action.class);
+        fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE).setAction(mockTriggerAction).setRequiredDataType(Integer.class);
+        fsm.start(TestStates.ONE);
+
+        //test
+        fsm.trigger(TestTriggers.TRIGGER_ONE, "I'm the wrong data type!");
     }
 
     //=====================================================//
@@ -149,7 +193,7 @@ public class FsmEngineTest
         //one
         FsmEngine.Action enterActionOne = new FsmEngine.Action() {
             @Override
-            void run() {
+            public void run() {
                 Assert.assertEquals(getOptionalInputData().getClass(), String.class);
                 fsm.nextState(TestStates.TWO, new Integer(2));
             }
@@ -157,7 +201,7 @@ public class FsmEngineTest
 
         FsmEngine.Action exitActionOne = new FsmEngine.Action() {
             @Override
-            void run() {
+            public void run() {
                 Assert.assertEquals(getOptionalInputData().getClass(), String.class);
             }
         };
@@ -169,7 +213,7 @@ public class FsmEngineTest
         //two
         FsmEngine.Action enterActionTwo = new FsmEngine.Action() {
             @Override
-            void run() {
+            public void run() {
                 Assert.assertEquals(getOptionalInputData().getClass(), Integer.class);
                 fsm.nextState(TestStates.THREE, new Long(3));
             }
@@ -177,7 +221,7 @@ public class FsmEngineTest
 
         FsmEngine.Action exitActionTwo = new FsmEngine.Action() {
             @Override
-            void run() {
+            public void run() {
                 Assert.assertEquals(getOptionalInputData().getClass(), Integer.class);
             }
         };

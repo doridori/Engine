@@ -76,12 +76,12 @@ public class FsmEngine<E, T>
      *
      * @param onTrigger
      * @param fromState
-     * @param toState
      */
-    public void defineTrigger(T onTrigger, E fromState, E toState)
+    public Trigger<E, T> defineTrigger(T onTrigger, E fromState)
     {
-        Trigger<E, T> newTrigger = new Trigger<>(onTrigger, fromState, toState);
+        Trigger<E, T> newTrigger = new Trigger<>(onTrigger, fromState);
         addTrigger(newTrigger);
+        return newTrigger;
     }
 
     /**
@@ -96,7 +96,7 @@ public class FsmEngine<E, T>
     }
 
     /**
-     * Start this FSM at the passed in state. Can only be called once. {@link #defineCylinder(Object)} and {@link #defineTrigger(Object, Object, Object)} cannot be called after this point.
+     * Start this FSM at the passed in state. Can only be called once. {@link #defineCylinder(Object)} and {@link #defineTrigger(Object, Object)} cannot be called after this point.
      *
      * @param startingState
      * @param optionalInputData
@@ -158,22 +158,47 @@ public class FsmEngine<E, T>
      * Incoming trigger event. Will need to match a trigger that has been setup
      *
      * @param triggerEnum
-     * @param optionalInputData can be null. Will be passed to next states {@link Action} classes.
+     * @param optionalInputData can be null. If this trigger defines an {@link Action} via {@link com.kodroid.engine.FsmEngine.Trigger#setAction(Action)}
+     *                          then this data object will be passed to that actions. If this trigger defines a
+     *                          {@link com.kodroid.engine.FsmEngine.Trigger#setToState(Object)} this data object will be
+     *                          passed to next states {@link Action} classes. Be aware that the passed objects Type will
+     *                          need to match the type declared for any receiving actions / states.
      */
     public void trigger(T triggerEnum, Object optionalInputData)
     {
         if(!mStarted)
-            throw new IllegalStateException("Not started!");
+            throw new IllegalStateException("Not started! start(...) needs to be called before any trigger events.");
 
+        //get all matching triggers for Trigger enum
         Map<E, Trigger<E, T>> triggersByEvent = mTriggerMap.get(triggerEnum);
+
         if(triggersByEvent == null)
             throw new NullPointerException("No Triggers exist for "+triggerEnum.toString());
+
+        //get trigger that matches current state from subset
         Trigger<E, T> trigger = triggersByEvent.get(mCurrentCylinder.stateEnum);
+
         if(trigger == null)
             throw new IllegalStateException("Trigger "+triggerEnum+" received but trigger not defined for current state :"+mCurrentCylinder.getStateEnum());
 
+        //passed data type checking
+        if(trigger.requiredDataType != null)
+        {
+            if(optionalInputData == null)
+                throw new NullPointerException(triggerEnum+" requires "+trigger.requiredDataType.getName());
+            if(!optionalInputData.getClass().equals(trigger.requiredDataType))
+                throw new IllegalArgumentException(triggerEnum+" requires "+trigger.requiredDataType.getName());
+        }
+
+        //any transition actions
+        if(trigger.transitionAction != null)
+        {
+            trigger.transitionAction.setInputData(optionalInputData);
+            trigger.transitionAction.run();
+        }
+
         if(trigger.toState == null)
-            return; //represents a safe to ignore trigger state
+            return; //no state transition should take place
         else
             nextState(trigger.toState, optionalInputData);
     }
@@ -247,27 +272,69 @@ public class FsmEngine<E, T>
     //=====================================================//
 
     /**
-     * External triggers. An event that triggers a state transition based upon the existing state.
+     * External triggers.
+     *
+     * This can be:
+     *
+     * - An event that triggers a state transition based upon the existing state.
+     * - An event that trigger an {@link com.kodroid.engine.FsmEngine.Action} based upon the existing state.
+     * - Both of the above.
      *
      * @param <E>
      * @param <T>
      */
-    private static class Trigger<E, T>
+    public static class Trigger<E, T>
     {
-        private final E fromState;
-        private final E toState;
         private final T onTrigger;
+        private final E fromState;
+        //opt
+        private E toState;
+        //opt
+        private Action transitionAction;
+        //opt
+        private Class<?> requiredDataType;
 
         /**
          * @param onTrigger
          * @param fromState
-         * @param toState can be null. If null will do nothing when this trigger received for the passed state.
          */
-        Trigger(T onTrigger, E fromState, E toState)
+        Trigger(T onTrigger, E fromState)
         {
             this.onTrigger = onTrigger;
             this.fromState = fromState;
+        }
+
+        /**
+         * Optional. If not set the trigger will not result in a State change.
+         *
+         * @param toState
+         */
+        public Trigger<E,T> setToState(E toState) {
             this.toState = toState;
+            return this;
+        }
+
+        /**
+         * Optional.
+         *
+         * @param transitionAction
+         */
+        public Trigger<E,T> setAction(Action transitionAction) {
+            this.transitionAction = transitionAction;
+            return this;
+        }
+
+        /**
+         * Optional. If this Triggers {@link Action} classe expects a input data type you can specify
+         * it here. If this trigger event is received type was not passed an exception will be thrown.
+         *
+         * @param requiredDataType
+         * @return
+         */
+        public Trigger<E,T> setRequiredDataType(Class<?> requiredDataType)
+        {
+            this.requiredDataType = requiredDataType;
+            return this;
         }
     }
 
