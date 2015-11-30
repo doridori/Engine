@@ -11,8 +11,12 @@ Simple to use. See the [tests](https://github.com/doridori/Engine/blob/master/sr
 FsmEngine<TestStates, TestTriggers> fsm = new FsmEngine<>();
 FsmEngine.Action mockEnterAction = Mockito.mock(FsmEngine.Action.class);
 fsm.defineCylinder(TestStates.ONE);
-fsm.defineCylinder(TestStates.TWO).setEnterAction(mockEnterAction).setRequiredDataType(String.class);
-fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE).setAction(mockTriggerAction).setRequiredDataType(Integer.class);
+fsm.defineCylinder(TestStates.TWO)
+    .setEnterAction(mockEnterAction)
+    .setRequiredDataType(String.class);
+fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE)
+    .setAction(mockTriggerAction)
+    .setRequiredDataType(Integer.class);
 fsm.start(TestStates.ONE);
 ```
 
