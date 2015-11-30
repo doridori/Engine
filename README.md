@@ -5,14 +5,23 @@ An observable Finite State Machine for Java.
 
 Similar to other FSMs out there. This has been designed with a terse interface in mind and also supports optional arbritrary data objects for each `Cylinder` (state), which can be accessed via a `Cylinders` `Actions` (enter / exit). 
 
-Simple to use. See the [tests](https://github.com/doridori/Engine/blob/master/src/test/java/FsmEngineTest.java) for some examples
+Simple to use. See the [tests](https://github.com/doridori/Engine/blob/master/src/test/java/com/kodroid/engine/FsmEngineTest.java) for some examples
 
 ```java
 FsmEngine<TestStates, TestTriggers> fsm = new FsmEngine<>();
-FsmEngine.Action mockEnterAction = Mockito.mock(FsmEngine.Action.class);
+
 fsm.defineCylinder(TestStates.ONE);
-fsm.defineCylinder(TestStates.TWO).setEnterAction(mockEnterAction).setRequiredDataType(String.class);
-fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE, TestStates.TWO);
+
+FsmEngine.Action mockEnterAction = Mockito.mock(FsmEngine.Action.class);
+fsm.defineCylinder(TestStates.TWO)
+    .setEnterAction(mockEnterAction)
+    .setRequiredDataType(String.class);
+    
+FsmEngine.Action mockTriggerAction = Mockito.mock(FsmEngine.Action.class);
+fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE)
+    .setAction(mockTriggerAction)
+    .setRequiredDataType(Integer.class);
+    
 fsm.start(TestStates.ONE);
 ```
 
