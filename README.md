@@ -9,14 +9,19 @@ Simple to use. See the [tests](https://github.com/doridori/Engine/blob/master/sr
 
 ```java
 FsmEngine<TestStates, TestTriggers> fsm = new FsmEngine<>();
-FsmEngine.Action mockEnterAction = Mockito.mock(FsmEngine.Action.class);
+
 fsm.defineCylinder(TestStates.ONE);
+
+FsmEngine.Action mockEnterAction = Mockito.mock(FsmEngine.Action.class);
 fsm.defineCylinder(TestStates.TWO)
     .setEnterAction(mockEnterAction)
     .setRequiredDataType(String.class);
+    
+FsmEngine.Action mockTriggerAction = Mockito.mock(FsmEngine.Action.class);
 fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE)
     .setAction(mockTriggerAction)
     .setRequiredDataType(Integer.class);
+    
 fsm.start(TestStates.ONE);
 ```
 
