@@ -30,7 +30,7 @@ This library does use some runtime checking of passed data types (as opposed to 
 1. Your tests should pick up any issues of runtime type mismatch
 2. The amount this increased code readablility (due to less LOCs) in this case makes the code easier to grok, therefore bugs are less likely to appear!
 
-From a Java perspective this feels slightly strange as the mindset is generally "If your casting your doing it wrong" but for this lib I feel its the right design descision. This shifts the area of code-stability one step away from the compiler and one towards your test suite.
+From a Java perspective this feels slightly strange as the mindset is generally "If your casting your doing it wrong" but for this lib I feel its the right design decision. This shifts the responsibility of code-stability one step away from the compiler and one towards your test suite.
 
 Usage
 =====
