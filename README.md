@@ -25,6 +25,13 @@ fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE)
 fsm.start(TestStates.ONE);
 ```
 
+This library does use some runtime checking of passed data types (as opposed to compile time). This is intentional as it vastly reduces the amount of code needed to create the FSM (i.e. dont need to employ extra objects / visitor pattern / interfaces to support compile time checking for optional state-specific data). The risk of this approach is that programming errors are not exposed till runtime. I feel this is justified for this library as:
+
+1. Your tests should pick up any issues of runtime type mismatch
+2. The amount this increased code readablility (due to less LOCs) in this case makes the code easier to grok, therefore bugs are less likely to appear!
+
+From a Java perspective this feels slightly strange as the mindset is generally "If your casting your doing it wrong" but for this lib I feel its the right design descision. This shifts the area of code-stability one step away from the compiler and one towards your test suite.
+
 Usage
 =====
 
