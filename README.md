@@ -5,27 +5,52 @@ Engine
 
 An observable Finite State Machine for Java.
 
-Similar to other FSMs out there. This has been designed with a terse interface in mind and also supports optional arbritrary data objects for each `Cylinder` (state), which can be accessed via a `Cylinders` `Actions` (enter / exit). 
+Terminology
+===========
+
+| Term    | Is a |
+| :------ | :------------------- |
+| Engine  | Finite State Machine |
+| Cylinder| State      |
+| Trigger | Event      |
+| Action  | Action     |
+
+About
+======
+
+- Like other popular FSMs (e.g. [Stateless4j](https://github.com/oxo42/stateless4j)) but designed with the below in mind.
+- Terse interface. Define only what you need.
+- Supports optional arbritrary data objects which `Action` can access if defined as a `Trigger` action or a `Cylinders` enter/exit action.
+
+Example
+=======
 
 Simple to use. See the [tests](https://github.com/doridori/Engine/blob/master/src/test/java/com/kodroid/engine/FsmEngineTest.java) for some examples
 
 ```java
 FsmEngine<TestStates, TestTriggers> fsm = new FsmEngine<>();
 
+//define first state with no associated actions
 fsm.defineCylinder(TestStates.ONE);
 
+//define second state with an associated ENTER action that requires a String input
 FsmEngine.Action mockEnterAction = Mockito.mock(FsmEngine.Action.class);
 fsm.defineCylinder(TestStates.TWO)
     .setEnterAction(mockEnterAction)
     .setRequiredDataType(String.class);
     
+//define a tigger action that can only be received when the FSM is in state ONE. Requires an Integer input.
 FsmEngine.Action mockTriggerAction = Mockito.mock(FsmEngine.Action.class);
 fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE)
     .setAction(mockTriggerAction)
     .setRequiredDataType(Integer.class);
     
+//set the initial state of the machine
 fsm.start(TestStates.ONE);
 ```
+
+Runtime Type Checking
+=====================
 
 This library does use some runtime checking of passed data types (as opposed to compile time). This is intentional as it vastly reduces the amount of code needed to create the FSM (i.e. dont need to employ extra objects / visitor pattern / interfaces to support compile time checking for optional state-specific data). The risk of this approach is that programming errors are not exposed till runtime. I feel this is justified for this library as:
 
