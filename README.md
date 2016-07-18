@@ -33,25 +33,25 @@ Example
 Simple to use. See the [tests](https://github.com/doridori/Engine/blob/master/src/test/java/com/kodroid/engine/FsmEngineTest.java) for some examples
 
 ```java
-FsmEngine<TestStates, TestTriggers> fsm = new FsmEngine<>();
+FsmEngine<CallStates, CallTriggers> fsm = new FsmEngine<>();
 
 //define first state with no associated actions
-fsm.defineCylinder(TestStates.ONE);
+fsm.defineCylinder(CallStates.OFF_CALL);
 
 //define second state with an associated ENTER action that requires a String input
 FsmEngine.Action mockEnterAction = Mockito.mock(FsmEngine.Action.class);
-fsm.defineCylinder(TestStates.TWO)
-    .setEnterAction(mockEnterAction)
+fsm.defineCylinder(CallStates.ON_CALL)
+    .setEnterAction(mockEnterAction) //mock action can access the passed String
     .setRequiredDataType(String.class);
     
 //define a tigger action that can only be received when the FSM is in state ONE. Requires an Integer input.
 FsmEngine.Action mockTriggerAction = Mockito.mock(FsmEngine.Action.class);
-fsm.defineTrigger(TestTriggers.TRIGGER_ONE, TestStates.ONE)
-    .setAction(mockTriggerAction)
+fsm.defineTrigger(CallTriggers.END_CALL, CallStates.ON_CALL)
+    .setAction(mockTriggerAction) //mock action can access the passed Integer
     .setRequiredDataType(Integer.class);
     
 //set the initial state of the machine
-fsm.start(TestStates.ONE);
+fsm.start(CallStates.OFF_CALL);
 ```
 
 Runtime Type Checking
