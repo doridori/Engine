@@ -5,6 +5,10 @@ Engine
 
 An observable Finite State Machine for Java.
 
+Useful when you have a number of distinct states, with some optional state transitions, and associated actions. 
+
+For example, you may have states `ON_CALL` and `OFF_CALL`, with triggers `START_CALL` and `END_CALL`, with an assocated action to print the call length when `END_CALL` is received. 
+
 Terminology
 ===========
 
@@ -18,9 +22,10 @@ Terminology
 About
 ======
 
-- Like other popular FSMs (e.g. [Stateless4j](https://github.com/oxo42/stateless4j)) but designed with the below in mind.
+- Like other popular FSMs (e.g. [Stateless4j](https://github.com/oxo42/stateless4j)) but also designed with the below in mind.
 - Terse interface. Define only what you need.
 - Supports optional arbritrary data objects which `Action` can access if defined as a `Trigger` action or a `Cylinders` enter/exit action.
+- Defensive. Will throw if a trigger is received for a state where it has not been pre-defined.
 
 Example
 =======
